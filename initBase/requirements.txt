@@ -1,0 +1,22 @@
+django==4.2
+
+
+gunicorn
+psycopg2-binary
+pygments
+pillow
+
+#api setup
+djangorestframework
+markdown       # Markdown support for the browsable API.
+django-filter  # Filtering support
+
+
+
+
+# for fast2Sms
+requests
+
+
+# Auth
+PyJWT

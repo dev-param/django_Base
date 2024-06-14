@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
 from .forms import CustomUserCreationForm, CustomUserChangeForm
-from .models import MyUser, walletModel, otpVerificationModel
+from .models import MyUser, walletModel, otpVerificationModel, AccessTokenModel, JwtAuthToken
 
 from django.contrib.contenttypes.models import ContentType
 
@@ -37,3 +37,5 @@ admin.site.register(MyUser, CustomUserAdmin)
 admin.site.register(walletModel)
 admin.site.register(otpVerificationModel)
 admin.site.register(ContentType)
+admin.site.register(JwtAuthToken)
+admin.site.register(AccessTokenModel)

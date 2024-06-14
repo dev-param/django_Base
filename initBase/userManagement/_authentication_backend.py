@@ -9,27 +9,11 @@ import jwt
 from initBase.settings import SECRET_KEY
 
 
-from .models import userAuthToken
+from .models import JwtAuthToken
 
 
 class CustomAuthBackend(BaseBackend):
     def authenticate(self, request, mobile_number=None, pin=None, **k):
-        # this  code only for offline testing 
-        # because currently admin template under plan
-        
-
-
-        if mobile_number == None:
-          
-            try:
-                u = get_user_model().objects.get(mobile_number=k.get("username"), pin=k.get("password"))
-                return u
-                
-            except get_user_model().DoesNotExist:
-                return None
-
-        # end here
-
         user = self.getUserWithPIN(mobile_number=mobile_number, pin=pin)
         # print(getattr(user, "is_active"))
         if user:
@@ -58,13 +42,13 @@ class CustomTokenAuth(BaseAuthentication):
             if decoded_token['token_type'] != "access":
                 raise AuthenticationFailed('Token Type Invalid')
 
-            return (userAuthToken.objects.get(access_token=token).for_user, token)
+            return (JwtAuthToken.objects.get(access_token=token).for_user, token)
             
         except jwt.exceptions.ExpiredSignatureError:
             raise AuthenticationFailed("Token has expired")
         except jwt.DecodeError:
             raise AuthenticationFailed('Error decoding token')
-        except userAuthToken.DoesNotExist:
+        except JwtAuthToken.DoesNotExist:
             raise AuthenticationFailed('No such user')
 
         # return None

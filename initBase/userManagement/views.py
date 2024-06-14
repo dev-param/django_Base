@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from rest_framework import authentication, permissions
 from rest_framework import status
 # from rest_framework import exceptions
-from .models import userAuthToken
+from .models import JwtAuthToken
 # from .userManagers import userManagers
 # forms
 from .forms import CreateUserForm, LoginApiForm
@@ -176,7 +176,7 @@ class LoginUserApiView(UserManagementApiView):
                                     },SECRET_KEY, algorithm="HS256")
             
 
-            print(userAuthToken.objects.create(access_token=access_token, refresh_token=refresh_token, for_user_id=user.id))
+            print(JwtAuthToken.objects.create(access_token=access_token, refresh_token=refresh_token, for_user_id=user.id))
             
         return Response({
             "access":  access_token,
@@ -199,12 +199,12 @@ class LoginUserApiView(UserManagementApiView):
 
 class ProfileApi(AuthUserManagementApiView):
     def post(self, request, format=None):
-        # print(userAuthToken.objects.first().refresh_token)
+        # print(JwtAuthToken.objects.first().refresh_token)
         print(request.user)
         u = request.user
         return Response({
             # "username":
             "Mobile Number": u.mobile_number,
-            "Active Sessions": userAuthToken.objects.filter(for_user_id=u.id).count()
+            "Active Sessions": JwtAuthToken.objects.filter(for_user_id=u.id).count()
         })
 

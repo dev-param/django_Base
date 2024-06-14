@@ -92,8 +92,8 @@ class RefreshTokenModel(models.Model):
     expire_at = models.DateTimeField()
     _at = models.DateTimeField(auto_now_add=True)
 
-class userAuthToken(models.Model):
-
+class JwtAuthToken(models.Model):
+    
     access_token = models.ForeignKey(AccessTokenModel, on_delete=models.CASCADE)
     refresh_token = models.ForeignKey(RefreshTokenModel, on_delete=models.CASCADE)
     _banned = models.JSONField(default=dict)

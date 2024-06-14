@@ -37,13 +37,13 @@ class userManagers(BaseUserManager):
         mobile_country_code = '+91'
         # pin = '0000'
         extra_fields.setdefault("_staff", {"status": True})
-        extra_fields.setdefault("_superuser", {"status": True})
+        extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("_active", {"status": True})
 
-        if extra_fields.get("_staff") is not True:
-            raise ValueError(_("Superuser must have _staff=True."))
-        if extra_fields.get("_superuser") is not True:
-            raise ValueError(_("Superuser must have _superuser=True."))
+        # if extra_fields.get("_staff").get is not True:
+        #     raise ValueError(_("Superuser must have _staff=True."))
+        # if extra_fields.get("_superuser") is not True:
+        #     raise ValueError(_("Superuser must have _superuser=True."))
         return self.create_user(mobile_number, mobile_country_code, pin, password, **extra_fields)
     
   

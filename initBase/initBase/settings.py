@@ -134,4 +134,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = "userManagement.MyUser"
 AUTHENTICATION_BACKENDS = [
     "userManagement._authentication_backend.CustomAuthBackend",
+    "django.contrib.auth.backends.ModelBackend",  # for admin login
 ]

@@ -76,3 +76,29 @@ class MyUser(AbstractBaseUser, PermissionsMixin):
     @property
     def is_active(self):
         return self._active.get("status")
+    
+
+
+
+class AccessTokenModel(models.Model):
+    token = models.SlugField(max_length=1000)
+    jti = models.CharField(max_length=200)
+    expire_at = models.DateTimeField()
+    _at = models.DateTimeField(auto_now_add=True)
+
+class RefreshTokenModel(models.Model):
+    token = models.SlugField(max_length=1000)
+    jti = models.CharField(max_length=200)
+    expire_at = models.DateTimeField()
+    _at = models.DateTimeField(auto_now_add=True)
+
+class userAuthToken(models.Model):
+
+    access_token = models.ForeignKey(AccessTokenModel, on_delete=models.CASCADE)
+    refresh_token = models.ForeignKey(RefreshTokenModel, on_delete=models.CASCADE)
+    _banned = models.JSONField(default=dict)
+    for_user = models.ForeignKey(MyUser, on_delete=models.CASCADE)
+
+    @property
+    def is_banned(self):
+        return self._banned.get("status")

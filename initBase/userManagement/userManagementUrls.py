@@ -12,4 +12,5 @@ from userManagement import views
 urlpatterns = [
     path('create/', views.CreateUserApiView.as_view(), name="user-create"),
     path('login/', views.LoginUserApiView.as_view(), name="user-login"),
+    path('profile/', views.ProfileApi.as_view(), name="user-profile"),
 ]

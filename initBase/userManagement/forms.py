@@ -110,3 +110,10 @@ class LoginApiForm(forms.Form):
                         message='Only digit characters are allowed.',
                     )])
     
+
+
+
+
+class AuthTokenForm(forms.Form):
+    token = forms.SlugField()
+

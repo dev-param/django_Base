@@ -10,11 +10,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import authentication, permissions
 from rest_framework import status
-# from rest_framework import exceptions
+from rest_framework.exceptions import AuthenticationFailed, NotAcceptable,ValidationError 
 from .models import JwtAuthToken
 # from .userManagers import userManagers
 # forms
-from .forms import CreateUserForm, LoginApiForm
+from .forms import CreateUserForm, LoginApiForm, AuthTokenForm
 
 
 # date 
@@ -29,6 +29,8 @@ import jwt
 from .basicLocal.sendOtp import sendOtpWrapper
 from initBase.settings import SECRET_KEY
 from ._authentication_backend import CustomTokenAuth
+from .jwt_auth import CreateJwtToken, UpdateRefreshToken
+from icecream import ic
 # Create your views here.
 
 
@@ -103,10 +105,6 @@ class CreateUserApiView(UserManagementApiView):
     
 
 
-# class CreateUserApiView(UserManagementApiView):
-
-#     def post(self, request, format=None):
-        
 
 
 
@@ -114,7 +112,13 @@ class RefreshTokenApiView(UserManagementApiView):
 
     def post(self, request, format=None):
         
-        return Response()
+        requestData = AuthTokenForm(request.data)
+        
+        if not requestData.is_valid():
+            raise ValidationError({"detail": requestData.errors.as_data()})
+        
+        
+        return Response(UpdateRefreshToken(requestData.cleaned_data.get("token")))
         
 
 
@@ -128,7 +132,7 @@ class LoginUserApiView(UserManagementApiView):
         loginFormData = LoginApiForm(request.data)
         if not loginFormData.is_valid():
             
-            return self.responseBadRequest({"error": loginFormData.errors.as_data()})
+            raise AuthenticationFailed({"detail": loginFormData.errors.as_data()})
         
         
         user = authenticate(
@@ -136,62 +140,40 @@ class LoginUserApiView(UserManagementApiView):
             mobile_number=loginFormData.cleaned_data.get("ph"), 
             pin=loginFormData.cleaned_data.get("pin"))
         if not user:
-            return self.responseBadRequest({"error": "Username or Password not Valid"})
-
+            raise AuthenticationFailed({"detail": "Username or Password not Valid"})
+        if not user.is_active:
+            raise AuthenticationFailed({"detail": user._active.get("detail", "Contact Us for More Information")})
+        
+        
         if loginFormData.cleaned_data.get("otp") == "":
             s = sendOtpWrapper(user, reasonId="login")
             if s.get("status") == "error":
-                return self.responseRequest({"success": s.get("error")})
+                return self.responseRequest({"success": s.get("detail")})
             return self.responseRequest({"success": "otp generated successfully"})
             
 
 
         otpModel = user.OtpField.filter(_at__gt=timezone.now() - timedelta(minutes=15))
         if not otpModel.exists():
-            return self.responseBadRequest({"error": "Wrong otp"})
+            raise AuthenticationFailed({"detail": "Wrong otp"})
  
         otpFV = otpModel.last()
         if loginFormData.cleaned_data.get("otp") == otpFV.otp:
             if  otpFV._Success:
-                return self.responseBadRequest({"error": "otp already used"})
+                raise AuthenticationFailed({"detail": "otp already used"})
             otpFV._Success=True
             otpFV.save()
-            access_token = jwt.encode({   
-                                        "token_type": "access",
-                                        "exp": timezone.now() + timedelta(minutes=150),
-                                        "iat": timezone.now(),
-                                        "jti": str(uuid.uuid4()),
-                                        "user": user.mobile_number
-                                    
-                                    },SECRET_KEY, algorithm="HS256")
             
-            refresh_token = jwt.encode({   
-                                        "token_type": "refresh",
-                                        "exp": timezone.now() + timedelta(days=8),
-                                        "iat": timezone.now(),
-                                        "jti": str(uuid.uuid4()),
-                                        "user": user.mobile_number
-
-                                    
-                                    },SECRET_KEY, algorithm="HS256")
             
 
-            print(JwtAuthToken.objects.create(access_token=access_token, refresh_token=refresh_token, for_user_id=user.id))
+        jwtTokenModel =  CreateJwtToken(user)
             
         return Response({
-            "access":  access_token,
-            "refresh_token": refresh_token
+            "access":  jwtTokenModel.access_token.token,
+            "refresh_token": jwtTokenModel.refresh_token.token
         })
 
-        
-        # MyUser.objects.filter().last()
-        
-        
-        # sendOtpWrapper(user, reasonId="login")
-        
-            
-            
-        return Response({})
+     
 
 
 
@@ -199,12 +181,17 @@ class LoginUserApiView(UserManagementApiView):
 
 class ProfileApi(AuthUserManagementApiView):
     def post(self, request, format=None):
-        # print(JwtAuthToken.objects.first().refresh_token)
-        print(request.user)
+
         u = request.user
         return Response({
-            # "username":
-            "Mobile Number": u.mobile_number,
-            "Active Sessions": JwtAuthToken.objects.filter(for_user_id=u.id).count()
+            "mobile number": u.mobile_number,
+            "active sessions": JwtAuthToken.objects.filter(for_user_id=u.id).count()
         })
 
+
+class UserLogout(AuthUserManagementApiView):
+    def post(self, request, format=None):
+
+        JwtAuthToken.objects.filter(access_token__token=request.auth).update(_banned={"status": True, "code": "self"})
+        return Response({"detail": "Session Destroy successfully"})
+    

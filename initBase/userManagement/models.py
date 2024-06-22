@@ -42,7 +42,7 @@ class MyUser(AbstractBaseUser, PermissionsMixin):
     last_name = None
     is_superuser = models.BooleanField(default=False)
     _staff = models.JSONField(default=dict({"status": False}))
-    _active = models.JSONField(default=dict({"status": False}))
+    _active = models.JSONField(default=dict({"status": False, "code": "number_verification", "detail": "Mobile Number Verification Pending"}))
     date_joined = models.DateTimeField(default=timezone.now)
 
 
@@ -84,21 +84,35 @@ class AccessTokenModel(models.Model):
     token = models.SlugField(max_length=1000)
     jti = models.CharField(max_length=200)
     expire_at = models.DateTimeField()
-    _at = models.DateTimeField(auto_now_add=True)
+    iat = models.DateTimeField()
 
 class RefreshTokenModel(models.Model):
     token = models.SlugField(max_length=1000)
     jti = models.CharField(max_length=200)
     expire_at = models.DateTimeField()
-    _at = models.DateTimeField(auto_now_add=True)
+    iat = models.DateTimeField()
 
 class JwtAuthToken(models.Model):
+
+
     
     access_token = models.ForeignKey(AccessTokenModel, on_delete=models.CASCADE)
     refresh_token = models.ForeignKey(RefreshTokenModel, on_delete=models.CASCADE)
     _banned = models.JSONField(default=dict)
+    _at = models.DateTimeField(auto_now_add=True)
+
     for_user = models.ForeignKey(MyUser, on_delete=models.CASCADE)
 
     @property
     def is_banned(self):
-        return self._banned.get("status")
+        return bool(self._banned.get("status"))
+    
+    @property
+    def is_destroyed(self):
+        if self._banned.get("status") and self._banned.get("code") == "self":
+            return True
+        else:
+            return False
+    
+    def __str__(self) -> str:
+        return self.for_user.mobile_number

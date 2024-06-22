@@ -4,18 +4,18 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.http import HttpRequest
 
 from rest_framework.authentication import BaseAuthentication
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, NotAuthenticated, PermissionDenied
 import jwt
 from initBase.settings import SECRET_KEY
 
-
+from icecream import ic
 from .models import JwtAuthToken
-
+from .jwt_auth import GetUserWithJwtAccess
 
 class CustomAuthBackend(BaseBackend):
     def authenticate(self, request, mobile_number=None, pin=None, **k):
         user = self.getUserWithPIN(mobile_number=mobile_number, pin=pin)
-        # print(getattr(user, "is_active"))
+        
         if user:
             return user
         return None
@@ -29,26 +29,31 @@ class CustomAuthBackend(BaseBackend):
 
 
 class CustomTokenAuth(BaseAuthentication):
+    
     def authenticate(self, request):
         authorization_header = request.META.get('HTTP_AUTHORIZATION')
         if not authorization_header or not authorization_header.startswith('Bearer '):
-            return None  
+            raise NotAuthenticated
 
-        print(authorization_header)
+        
         token = authorization_header.split(' ')[1]
-        try:
+        
+        JwtAuthTokenModel= GetUserWithJwtAccess(token=token)
 
-            decoded_token = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-            if decoded_token['token_type'] != "access":
-                raise AuthenticationFailed('Token Type Invalid')
-
-            return (JwtAuthToken.objects.get(access_token=token).for_user, token)
+        user = JwtAuthTokenModel.for_user
+        if  not user.is_active:
             
-        except jwt.exceptions.ExpiredSignatureError:
-            raise AuthenticationFailed("Token has expired")
-        except jwt.DecodeError:
-            raise AuthenticationFailed('Error decoding token')
-        except JwtAuthToken.DoesNotExist:
-            raise AuthenticationFailed('No such user')
 
-        # return None
+            raise PermissionDenied({"code": "User Inactive", "detail": user._active.get('detail', "Contact Us for More Information")})
+        
+        if  JwtAuthTokenModel.is_destroyed:
+            raise AuthenticationFailed
+        if  JwtAuthTokenModel.is_banned:
+            raise PermissionDenied({"code": "Suspicious Activity Detected", "detail": JwtAuthTokenModel._banned.get('detail', "Contact Us for More Information")})
+        
+        return (user, token)
+    
+
+
+
+

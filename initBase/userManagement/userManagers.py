@@ -31,16 +31,19 @@ class userManagers(BaseUserManager):
         """
         Create and save a SuperUser with the given email and password.
         """
+        print(mobile_number)
+        print(pin)
+        print(password)
         mobile_country_code = '+91'
         # pin = '0000'
-        extra_fields.setdefault("is_staff", {"status": True})
+        extra_fields.setdefault("_staff", {"status": True})
         extra_fields.setdefault("is_superuser", True)
-        extra_fields.setdefault("is_active", True)
+        extra_fields.setdefault("_active", {"status": True})
 
-        if extra_fields.get("is_staff") is not True:
-            raise ValueError(_("Superuser must have is_staff=True."))
-        if extra_fields.get("is_superuser") is not True:
-            raise ValueError(_("Superuser must have is_superuser=True."))
+        # if extra_fields.get("_staff").get is not True:
+        #     raise ValueError(_("Superuser must have _staff=True."))
+        # if extra_fields.get("_superuser") is not True:
+        #     raise ValueError(_("Superuser must have _superuser=True."))
         return self.create_user(mobile_number, mobile_country_code, pin, password, **extra_fields)
     
   

@@ -19,4 +19,12 @@ requests
 
 
 # Auth
-PyJWT
+PyJWTPyJWT
+
+
+
+
+
+# for dev 
+
+icecream

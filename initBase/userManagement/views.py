@@ -1,4 +1,7 @@
-from django.shortcuts import render
+# python
+import uuid
+
+from django.shortcuts import render, HttpResponse
 from django.contrib.auth import get_user_model,authenticate, login
 # from django.core.exceptions import BadRequest
 
@@ -7,11 +10,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import authentication, permissions
 from rest_framework import status
-# from rest_framework import exceptions
-from .models import MyUser, otpVerificationModel
+from rest_framework.exceptions import AuthenticationFailed, NotAcceptable,ValidationError 
+from .models import JwtAuthToken
 # from .userManagers import userManagers
 # forms
-from .forms import CreateUserForm, LoginApiForm
+from .forms import CreateUserForm, LoginApiForm, AuthTokenForm
 
 
 # date 
@@ -25,7 +28,15 @@ import jwt
 # basic local
 from .basicLocal.sendOtp import sendOtpWrapper
 from initBase.settings import SECRET_KEY
+from ._authentication_backend import CustomTokenAuth
+from .jwt_auth import CreateJwtToken, UpdateRefreshToken
+from icecream import ic
 # Create your views here.
+
+
+
+
+
 class BaseUserManagementApiView(APIView):
 
     pass
@@ -40,11 +51,11 @@ class UserManagementApiView(BaseUserManagementApiView):
         return Response(data=data, status=statusCode )    
 
 class AuthUserManagementApiView(BaseUserManagementApiView):
-    authentication_classes = [authentication.TokenAuthentication]
-    permission_classes = [permissions.IsAdminUser]
+    authentication_classes = [CustomTokenAuth]
+    # permission_classes = [permissions.IsAdminUser]
 
 
-
+    pass
 
 
 
@@ -94,25 +105,34 @@ class CreateUserApiView(UserManagementApiView):
     
 
 
-# class CreateUserApiView(UserManagementApiView):
 
-#     def post(self, request, format=None):
+
+
+class RefreshTokenApiView(UserManagementApiView):
+
+    def post(self, request, format=None):
+        
+        requestData = AuthTokenForm(request.data)
+        
+        if not requestData.is_valid():
+            raise ValidationError({"detail": requestData.errors.as_data()})
+        
+        
+        return Response(UpdateRefreshToken(requestData.cleaned_data.get("token")))
         
 
 
 class LoginUserApiView(UserManagementApiView):
     def post(self, request, format=None):
         
+        
+        
 
-        print(jwt.encode(
-            payload={"kjh": "j"},
-            key=jwt.base
-        ))
-        return Response()
+        
         loginFormData = LoginApiForm(request.data)
         if not loginFormData.is_valid():
             
-            return self.responseBadRequest({"error": loginFormData.errors.as_data()})
+            raise AuthenticationFailed({"detail": loginFormData.errors.as_data()})
         
         
         user = authenticate(
@@ -120,33 +140,58 @@ class LoginUserApiView(UserManagementApiView):
             mobile_number=loginFormData.cleaned_data.get("ph"), 
             pin=loginFormData.cleaned_data.get("pin"))
         if not user:
-            return self.responseBadRequest({"error": "Username or Password not Valid"})
-
+            raise AuthenticationFailed({"detail": "Username or Password not Valid"})
+        if not user.is_active:
+            raise AuthenticationFailed({"detail": user._active.get("detail", "Contact Us for More Information")})
+        
+        
         if loginFormData.cleaned_data.get("otp") == "":
             s = sendOtpWrapper(user, reasonId="login")
             if s.get("status") == "error":
-                return self.responseRequest({"success": s.get("error")})
+                return self.responseRequest({"success": s.get("detail")})
             return self.responseRequest({"success": "otp generated successfully"})
             
 
 
         otpModel = user.OtpField.filter(_at__gt=timezone.now() - timedelta(minutes=15))
         if not otpModel.exists():
-            return self.responseBadRequest({"error": "Wrong otp"})
+            raise AuthenticationFailed({"detail": "Wrong otp"})
  
         otpFV = otpModel.last()
         if loginFormData.cleaned_data.get("otp") == otpFV.otp:
             if  otpFV._Success:
-                return self.responseBadRequest({"error": "otp already used"})
+                raise AuthenticationFailed({"detail": "otp already used"})
             otpFV._Success=True
             otpFV.save()
+            
+            
 
-        
-        # MyUser.objects.filter().last()
-        
-        
-        # sendOtpWrapper(user, reasonId="login")
-        
+        jwtTokenModel =  CreateJwtToken(user)
             
-            
-        return Response({})
+        return Response({
+            "access":  jwtTokenModel.access_token.token,
+            "refresh_token": jwtTokenModel.refresh_token.token
+        })
+
+     
+
+
+
+
+
+class ProfileApi(AuthUserManagementApiView):
+    def post(self, request, format=None):
+
+        u = request.user
+        return Response({
+            "mobile number": u.mobile_number,
+            "active sessions": JwtAuthToken.objects.filter(for_user_id=u.id).count()
+        })
+
+
+class UserLogout(AuthUserManagementApiView):
+    def post(self, request, format=None):
+
+        JwtAuthToken.objects.filter(access_token__token=request.auth).update(_banned={"status": True, "code": "self"})
+        return Response({"detail": "Session Destroy successfully"})
+    

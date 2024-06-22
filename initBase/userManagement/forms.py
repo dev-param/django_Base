@@ -110,3 +110,10 @@ class LoginApiForm(forms.Form):
                         message='Only digit characters are allowed.',
                     )])
     
+
+
+
+
+class AuthTokenForm(forms.Form):
+    token = forms.RegexField(r"^((?:\.?(?:[A-Za-z0-9-_]+)){3})$",required=True,max_length=999, min_length=200 )
+

@@ -1,6 +1,7 @@
 import requests
 from userManagement.models import otpVerificationModel, MyUser
 import random
+from rest_framework.exceptions import NotAcceptable, PermissionDenied
 from django.utils import timezone
 from datetime import timedelta
 
@@ -17,7 +18,7 @@ def sendOtpWrapper(userModel, reasonId):
 
     
     if len(userOtp) > 50:
-        return {"status": "error", 'error': "User Blocked for 24 Hours"}
+        raise NotAcceptable( {"status": "error", 'error': "User Blocked for 24 Hours"})
         
     last15min = userOtp.filter(_at__gt=timezone.now() - timedelta(minutes=15))
 
@@ -27,14 +28,14 @@ def sendOtpWrapper(userModel, reasonId):
 
 
     if len(last15min) > 3:
-        return {"status": "error", 'error': "User Blocked for 15 minute"}
+        raise NotAcceptable(  {"status": "error", 'error': "User Blocked for 15 minute"})
 
     
 
     last2min = userOtp.filter(_at__gt=timezone.now() - timedelta(minutes=2))
 
     if  last2min.exists():
-        return {"status": "error", 'error': "User Blocked for 2 minute"}
+        raise NotAcceptable(  {"status": "error", 'error': "User Blocked for 2 minute"})
         
     else:
         
@@ -44,6 +45,8 @@ def sendOtpWrapper(userModel, reasonId):
 
 
 def sendSms(userModel, reasonId):
+
+    
     otpCode = str(random.randint(1111,9999))
 
     
@@ -63,7 +66,7 @@ def sendSms(userModel, reasonId):
     else:
         otpModel.info = {"status": "error", "data": s.get("data", "Info Not Available")}
         otpModel.save()
-        return {"status": "error", "userResponse": "massage not Sent Please Check Your number" }
+        raise PermissionDenied(  {"status": "error", "userResponse": "massage not Sent Please Check Your number" })
 
 
         
@@ -78,7 +81,7 @@ def Fast2Sms(otpCode, number):
     
     payload = f"variables_values={otpCode}&route=otp&numbers={number}"
     headers = {
-        'authorization': "Rg2XyQTx8PmAoqcKj4zaOZHrSMkC0JIFGnL53NtEbw6iv9UeWfFMb5LTPj1Y89cfNRhspDmUEaXeiBVK",
+        'authorization': "ADD YOUR API HERE",
         'Content-Type': "application/x-www-form-urlencoded",
         'Cache-Control': "no-cache",
         }

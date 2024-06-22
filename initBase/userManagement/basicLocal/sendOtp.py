@@ -81,7 +81,7 @@ def Fast2Sms(otpCode, number):
     
     payload = f"variables_values={otpCode}&route=otp&numbers={number}"
     headers = {
-        'authorization': "Rg2XyQTx8PmAoqcKj4zaOZHrSMkC0JIFGnL53NtEbw6iv9UeWfFMb5LTPj1Y89cfNRhspDmUEaXeiBVK",
+        'authorization': "ADD YOUR API HERE",
         'Content-Type': "application/x-www-form-urlencoded",
         'Cache-Control': "no-cache",
         }

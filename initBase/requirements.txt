@@ -19,7 +19,7 @@ requests
 
 
 # Auth
-PyJWTPyJWT
+PyJWT
 
 
 

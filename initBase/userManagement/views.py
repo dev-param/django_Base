@@ -82,21 +82,7 @@ class CreateUserApiView(UserManagementApiView):
             
                 
 
-            # Fast2Sms("45464", f.cleaned_data['ph'])
-            # print(MyUser.objects.get(mobile_number=f.cleaned_data['ph']).is_staff)
          
-            # print((f.cleaned_data['ph']))
-
-            # sendOtpWrapper
-            # newUser = MyUser.objects.create_user(
-            #     mobile_number=f.cleaned_data['ph'],
-            #     pin=f.cleaned_data['pin'],
-            #     mobile_country_code=f.cleaned_data['dial_code'],
-            #     password=f.cleaned_data['password']
-
-            #     )
-            # print(newUser.mobile_number)
-            # newUser.save()
             
             
             

@@ -7,3 +7,10 @@ psycopg2-binary
 djangorestframework
 markdown       # Markdown support for the browsable API.
 django-filter  # Filtering support
+
+
+celery[redis]
+
+django_celery_results
+
+requests

@@ -26,8 +26,11 @@ services:
       - 1984:1984
 
     depends_on:
+      redis: 
+        condition: service_healthy
       db:
         condition: service_healthy
+
     volumes:
       - migrations-userapi:/serverapi/userapi/migrations
       - static-files:/serverapi/static
@@ -51,6 +54,22 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  redis:
+    restart: unless-stopped
+    image: redis:7.4.0-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+    expose:
+      - 6379
+
+
+
+
 volumes:
   db-data:
   migrations-userapi:

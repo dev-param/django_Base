@@ -48,4 +48,5 @@ COPY . .
 EXPOSE 1984
 
 # Run the application.
-CMD gunicorn 'initBase.wsgi' --reload --bind=0.0.0.0:1984
+# CMD gunicorn 'initBase.wsgi' --reload --bind=0.0.0.0:1984 
+CMD ["sh", "-c", "gunicorn 'initBase.wsgi' --reload --bind=0.0.0.0:1984 & celery -A initBase worker --loglevel=info"]

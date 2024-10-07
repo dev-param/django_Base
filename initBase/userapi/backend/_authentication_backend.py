@@ -31,7 +31,7 @@ class CustomAuthBackend(BaseBackend):
         if user.check_password(password):
             return user
             
-        print(verifier.LoginLog(user))
+        verifier.LoginLog(user)
 
 
 

@@ -12,6 +12,17 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 import os
 from pathlib import Path
+from icecream import install
+from icecream import ic
+# import logging
+install()
+# def warn(s):
+#     logging.warning(s)
+# also ^ 
+
+ic.configureOutput(includeContext=True, contextAbsPath=False)
+# ic.disable()
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent

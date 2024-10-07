@@ -14,3 +14,7 @@ celery[redis]
 django_celery_results
 
 requests
+icecream
+
+# Auth
+PyJWT

@@ -1,4 +1,8 @@
 from django.db import models
+import uuid
+# date 
+from django.utils import timezone
+from datetime import timedelta
 
 
 class TokenModel(models.Model):
@@ -14,7 +18,3 @@ class TokenModel(models.Model):
 
 class AuthTokenModel(models.Model):
     tokenFiled = models.ManyToManyField(TokenModel)
-    
-
-
-    

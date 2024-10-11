@@ -7,3 +7,8 @@ def sendmailOtp():
     print("task start")
     
     print("task done")
+
+@shared_task
+def sendMobileOtp(otp, ph_number):
+    time.sleep(5)
+    ic(f"we sent successfully {otp} on {ph_number}")

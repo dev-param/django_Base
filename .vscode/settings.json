@@ -2,9 +2,11 @@
     "cSpell.words": [
         "APIX",
         "exampledb",
+        "jwtmodel",
         "loginurlpatterns",
         "userapi",
-        "Usermanagement"
+        "Usermanagement",
+        "waheguru"
     ],
     "editor.fontSize": 20,
     "terminal.integrated.fontSize": 20

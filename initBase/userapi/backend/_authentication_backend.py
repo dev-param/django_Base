@@ -18,6 +18,7 @@ class CustomAuthBackend(BaseBackend):
         ` 
          
         """
+
         if username is None:
             username = kwargs.get(UserModel.USERNAME_FIELD)
         if username is None or password is None:

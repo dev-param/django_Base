@@ -14,7 +14,7 @@ class CustomAPIX(APIException):
             detail = self.default_detail
         if code is None:
             code = self.default_code
-        if statusCode is None:
+        if statusCode is not None:
             self.status_code = statusCode
         
         # For validation failures, we may collect many errors together,

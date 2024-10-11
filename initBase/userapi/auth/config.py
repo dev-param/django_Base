@@ -10,6 +10,7 @@ class Config:
     PTEngine = {
         "mobile_otp": MobilePTEngine
     }
+    Default_mfa = "mobile_otp"
  
 
         
@@ -27,7 +28,3 @@ class Config:
         
     
     
-    # ["mobile_verification", {
-    #         "handler": ""
-    #     }]
-# # None | [['Mobile_verification', {"handler_class": ''}]] 

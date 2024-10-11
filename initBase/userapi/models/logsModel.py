@@ -11,6 +11,7 @@ class LogsModel(models.Model):
     _tag = models.CharField(default="system")
     _info = models.JSONField(default=dict)
     _at = models.DateTimeField(auto_now_add=True)
+    expire_at = models.DateTimeField(null=True)
     _user = models.ForeignKey(CustomUsers, on_delete=models.CASCADE, null=True)
     @classmethod
     def loginFailedLog(cls,user,create:bool=False, _info={}):
@@ -25,9 +26,22 @@ class LogsModel(models.Model):
         return cls.objects.filter(_tag="loginFail", _user=user)
     
     @classmethod
-    def xAuthModel(cls, user, create:bool=False, _info=dict):
-        _info.setdefault("exp_at", (timezone.now() - timedelta(minutes=15)))
-        
-        if create:
-            pass
-            # return cls.objects.create()
+    def otpLog(cls, for_token, otp, user, expire_in=timedelta(minutes=15)):
+        cls.objects.create(
+                            _type = LogsModel._type_logs.XAUTH,
+                            _tag = "otp",
+                            _info = {
+                                        "for_token": for_token,
+                                        "otp": otp
+                                    },
+                            expire_at=timezone.now()+expire_in,
+                            _user=user
+        )
+    @classmethod
+    def filterOtpLog(cls, user):
+        return cls.objects.filter(
+                            _type = LogsModel._type_logs.XAUTH,
+                            _tag = "otp",
+                            _user=user
+                            
+        )
